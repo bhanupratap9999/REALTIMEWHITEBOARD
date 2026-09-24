@@ -449,22 +449,30 @@ docker compose up -d
 
 ### Option C: Split Deployment (Vercel/Netlify for Frontend + Render for Backend)
 
+Vercel and Netlify host the compiled frontend only. They do not run the persistent Node.js process required by Socket.IO, so deploying only the frontend will make the REST fallback appear reachable while real-time collaboration stays disconnected.
+
 1. **Deploy Backend (Render / Railway / Fly.io)**:
    - Deploy as a Node.js web service. Note the backend URL (e.g., `https://whiteboard-api.onrender.com`).
+  - For Render, use the included `render.yaml`, or set **Build Command** to `npm run postinstall && npm run build` and **Start Command** to `npm start`.
    - Set `CLIENT_URL=https://your-frontend.vercel.app` in backend environment variables.
 
 2. **Deploy Frontend (Vercel)**:
    - Import the repository in Vercel.
    - Pre-configured `vercel.json` will automatically build the client and route SPA pages.
-   - Set Environment Variable in Vercel:
-     - `VITE_SERVER_URL`: `https://whiteboard-api.onrender.com`
-   - Deploy!
+  - Set the Vercel project environment variable **before building**:
+    - Name: `VITE_SERVER_URL`
+    - Value: `https://whiteboard-api.onrender.com` (your actual backend URL, with no trailing slash)
+    - Environments: enable **Production** and **Preview** as needed
+  - Redeploy after saving the variable. Vite embeds `VITE_SERVER_URL` into the browser bundle at build time.
+  - Open the deployed app and verify `https://whiteboard-api.onrender.com/api/health` before testing a shared board.
 
 3. **Deploy Frontend (Netlify)**:
    - Import the repository in Netlify.
    - Pre-configured `netlify.toml` automatically builds from `client` and configures SPA redirects.
    - Set Environment Variable in Netlify:
      - `VITE_SERVER_URL`: `https://whiteboard-api.onrender.com`
+
+  If `VITE_SERVER_URL` is missing, the client intentionally falls back to the current origin for fullstack deployments. On a frontend-only Vercel deployment that origin has no Socket.IO server, so the connection will fail. The Backend Server URL dialog can also be used to test and save the backend URL in the browser, but the deployment environment variable is the recommended configuration.
 
 ---
 
