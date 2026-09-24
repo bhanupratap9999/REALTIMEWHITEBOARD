@@ -1,0 +1,29 @@
+{
+  "name": "realtime-whiteboard-ot",
+  "version": "1.0.0",
+  "description": "Real-Time Multi-Party Whiteboard with Operational Transformation (OT) conflict resolution",
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names \"SERVER,CLIENT\" --prefix-colors \"cyan,magenta\" \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "test": "npm --prefix server test",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "whiteboard",
+    "operational-transformation",
+    "ot",
+    "real-time",
+    "collaboration",
+    "socket.io",
+    "fabricjs",
+    "react",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "MIT"
+}
