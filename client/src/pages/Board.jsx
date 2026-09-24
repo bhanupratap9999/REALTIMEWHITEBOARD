@@ -11,6 +11,8 @@ import { OTPanel } from '../components/OTPanel';
 import { getBoard } from '../services/api';
 import { getRandomColor } from '../utils/operations';
 import { getSavedTheme, saveTheme, THEMES } from '../services/themeService';
+import { BackendModal } from '../components/BackendModal';
+import { getBackendUrl } from '../services/socket';
 import {
   Layers,
   Share2,
@@ -22,6 +24,8 @@ import {
   Sparkles,
   Zap,
   Grid,
+  AlertTriangle,
+  Server,
 } from 'lucide-react';
 
 export function Board() {
@@ -75,6 +79,11 @@ export function Board() {
   const [operationHistory, setOperationHistory] = useState([]);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [otPanelOpen, setOtPanelOpen] = useState(false);
+  const [backendModalOpen, setBackendModalOpen] = useState(false);
+
+  const handleBackendReconnected = () => {
+    window.location.reload();
+  };
 
   // boardVersion as a ref so canvas event listeners never go stale
   const boardVersionRef = useRef(0);
@@ -277,16 +286,42 @@ export function Board() {
           </button>
         </div>
 
-        {/* Center: Collaboration Status Pill with 3D Ring */}
-        <div className="hidden md:flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-inner">
+        {/* Center: Collaboration Status Pill (Click to configure backend URL) */}
+        <button
+          onClick={() => setBackendModalOpen(true)}
+          className={`hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold shadow-inner cursor-pointer transition-all ${
+            connectionStatus === 'connected'
+              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+              : connectionStatus === 'reconnecting'
+              ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 animate-pulse'
+              : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30'
+          }`}
+          title="Click to configure or test Backend Server URL"
+        >
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            {connectionStatus === 'connected' && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            )}
+            <span
+              className={`relative inline-flex rounded-full h-2 w-2 ${
+                connectionStatus === 'connected'
+                  ? 'bg-emerald-500'
+                  : connectionStatus === 'reconnecting'
+                  ? 'bg-amber-500'
+                  : 'bg-rose-500'
+              }`}
+            />
           </span>
-          <span>Real-time OT active</span>
+          <span>
+            {connectionStatus === 'connected'
+              ? 'Real-time OT active'
+              : connectionStatus === 'reconnecting'
+              ? 'Reconnecting...'
+              : 'Backend Offline'}
+          </span>
           <span className="text-slate-300 dark:text-slate-600">•</span>
-          <span className="font-mono text-[11px] text-blue-600 dark:text-blue-400 font-bold">v{boardVersion}</span>
-        </div>
+          <span className="font-mono text-[11px] font-bold">v{boardVersion}</span>
+        </button>
 
         {/* Right: Theme Service, Users, OT Inspector, and Share Button */}
         <div className="flex items-center gap-2.5">
@@ -328,7 +363,7 @@ export function Board() {
           </div>
 
           {/* Active Users Avatars */}
-          <UserPresence activeUsers={activeUsers} currentUserId={user.userId} />
+          <UserPresence activeUsers={activeUsers} currentUserId={user.userId} connectionStatus={connectionStatus} />
 
           {/* 3D OT Inspector Button */}
           <button
@@ -353,6 +388,24 @@ export function Board() {
           </button>
         </div>
       </header>
+
+      {/* Backend Disconnected Warning Banner */}
+      {connectionStatus !== 'connected' && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between text-xs text-amber-800 dark:text-amber-300 z-20 shrink-0">
+          <div className="flex items-center gap-2 truncate pr-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="truncate">
+              <strong>Real-Time Disconnected:</strong> Cannot connect to WebSocket backend at <code className="bg-black/20 dark:bg-black/40 px-1.5 py-0.5 rounded font-mono text-[11px]">{getBackendUrl()}</code>.
+            </span>
+          </div>
+          <button
+            onClick={() => setBackendModalOpen(true)}
+            className="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-sm transition-all shrink-0 cursor-pointer"
+          >
+            Configure Backend URL
+          </button>
+        </div>
+      )}
 
       {/* ----------------------------------------------------------------- */}
       {/* MAIN CANVAS AREA                                                   */}
@@ -418,6 +471,13 @@ export function Board() {
         operationHistory={operationHistory}
         emitOperation={emitOperation}
         currentUser={user}
+      />
+
+      {/* Backend Server Configuration Modal */}
+      <BackendModal
+        isOpen={backendModalOpen}
+        onClose={() => setBackendModalOpen(false)}
+        onReconnected={handleBackendReconnected}
       />
 
       {/* Optional Display Name Modal */}

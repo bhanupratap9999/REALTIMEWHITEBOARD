@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
 import { Users, ChevronDown } from 'lucide-react';
 
-export function UserPresence({ activeUsers = [], currentUserId = null }) {
+export function UserPresence({ activeUsers = [], currentUserId = null, connectionStatus = 'connected' }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const isConnected = connectionStatus === 'connected';
 
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-xs text-slate-200 transition-all shadow-sm"
-        title="View active users"
+        title={isConnected ? 'View active users' : 'Backend server offline'}
       >
-        <Users className="w-3.5 h-3.5 text-indigo-400" />
+        <Users className={`w-3.5 h-3.5 ${isConnected ? 'text-indigo-400' : 'text-slate-500'}`} />
         <span className="font-medium">
-          Online: <span className="text-emerald-400 font-bold">{activeUsers.length}</span>
+          {isConnected ? (
+            <>Online: <span className="text-emerald-400 font-bold">{activeUsers.length}</span></>
+          ) : (
+            <span className="text-amber-400 font-semibold">{connectionStatus === 'reconnecting' ? 'Connecting...' : 'Offline'}</span>
+          )}
         </span>
 
         {/* Mini stacked avatars preview */}
