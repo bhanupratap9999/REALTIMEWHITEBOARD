@@ -404,6 +404,70 @@ To demonstrate the Operational Transformation engine to judges:
 
 ---
 
+## 19. Deployment Anywhere Guide
+
+This repository is pre-configured for instant deployment on any cloud provider or container runtime.
+
+### Option A: Fullstack Single Service (Render, Railway, Heroku, Fly.io, VPS)
+In this mode, a single service runs the Node.js backend and automatically serves the pre-built React SPA from `client/dist`.
+
+1. **Render.com**:
+   - Push your repo to GitHub.
+   - Go to **Render Dashboard** > **New Web Service** (or use Blueprint with `render.yaml`).
+   - **Build Command**: `npm run postinstall && npm run build`
+   - **Start Command**: `npm start`
+   - **Environment Variables**:
+     - `PORT`: `10000` (Render defaults to 10000)
+     - `MONGODB_URI`: (Your MongoDB Atlas connection string, or omit for in-memory mode)
+
+2. **Railway / Heroku**:
+   - Connect the repository.
+   - Railway and Heroku will automatically detect `Procfile` (`web: npm start`) and root `package.json`.
+   - Add `MONGODB_URI` environment variable if using MongoDB.
+
+---
+
+### Option B: Docker Container (Any VPS, DigitalOcean, AWS, GCP)
+
+Build and run anywhere with Docker:
+
+```bash
+# Build multi-stage image
+docker build -t realtime-whiteboard .
+
+# Run container
+docker run -p 5000:5000 -e MONGODB_URI="mongodb+srv://..." realtime-whiteboard
+```
+
+Or run both the App and a local MongoDB instance with **Docker Compose**:
+```bash
+docker compose up -d
+# App will be accessible at http://localhost:5000
+```
+
+---
+
+### Option C: Split Deployment (Vercel/Netlify for Frontend + Render for Backend)
+
+1. **Deploy Backend (Render / Railway / Fly.io)**:
+   - Deploy as a Node.js web service. Note the backend URL (e.g., `https://whiteboard-api.onrender.com`).
+   - Set `CLIENT_URL=https://your-frontend.vercel.app` in backend environment variables.
+
+2. **Deploy Frontend (Vercel)**:
+   - Import the repository in Vercel.
+   - Pre-configured `vercel.json` will automatically build the client and route SPA pages.
+   - Set Environment Variable in Vercel:
+     - `VITE_SERVER_URL`: `https://whiteboard-api.onrender.com`
+   - Deploy!
+
+3. **Deploy Frontend (Netlify)**:
+   - Import the repository in Netlify.
+   - Pre-configured `netlify.toml` automatically builds from `client` and configures SPA redirects.
+   - Set Environment Variable in Netlify:
+     - `VITE_SERVER_URL`: `https://whiteboard-api.onrender.com`
+
+---
+
 ## License
 
 MIT License. Built with ❤️ for the Hackathon.

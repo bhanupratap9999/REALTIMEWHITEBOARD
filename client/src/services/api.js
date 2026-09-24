@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+const rawServerUrl = import.meta.env.VITE_SERVER_URL;
+const API_URL = rawServerUrl && rawServerUrl.trim() !== ''
+  ? rawServerUrl.trim().replace(/\/$/, '')
+  : (import.meta.env.DEV ? 'http://localhost:5000' : '');
 
 export async function createBoard(name = 'Hackathon Whiteboard') {
   const res = await fetch(`${API_URL}/api/boards`, {
